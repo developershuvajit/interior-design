@@ -1,21 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import products, { categories } from '../data/products';
 import ProductCard from '../components/ProductCard';
 
 const Products = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const productsPerPage = 9;
 
-    // Check if products data exists
-    if (!products || products.length === 0) {
-        return (
-            <div style={{ marginTop: '100px', textAlign: 'center' }}>
-                <h2>No products found</h2>
-            </div>
-        );
-    }
+    // ✅ Hooks always called (before any conditional return)
+    // URL থেকে category এবং search প্যারামিটার পড়ুন
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const categoryParam = params.get('category');
+        const searchParam = params.get('search');
+
+        if (categoryParam && categories.includes(categoryParam)) {
+            setSelectedCategory(categoryParam);
+        } else if (categoryParam) {
+            setSelectedCategory('All');
+        }
+
+        if (searchParam) {
+            setSearchTerm(searchParam);
+        }
+    }, [location.search]);
+
+    // Reset to first page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedCategory, searchTerm]);
+
+    // URL আপডেট করার ফাংশন
+    const updateURL = (category, search) => {
+        const params = new URLSearchParams();
+        if (category && category !== 'All') {
+            params.set('category', category);
+        }
+        if (search) {
+            params.set('search', search);
+        }
+        navigate(`/products${params.toString() ? `?${params.toString()}` : ''}`, { replace: true });
+    };
 
     // Filter products based on category and search
     const filteredProducts = products.filter(product => {
@@ -44,18 +73,28 @@ const Products = () => {
 
     const handleFilterChange = (category) => {
         setSelectedCategory(category);
-        setCurrentPage(1);
+        updateURL(category, searchTerm);
     };
 
     const handleSearchChange = (e) => {
-        setSearchTerm(e.target.value);
-        setCurrentPage(1);
+        const value = e.target.value;
+        setSearchTerm(value);
+        updateURL(selectedCategory, value);
     };
 
     const clearSearch = () => {
         setSearchTerm('');
-        setCurrentPage(1);
+        updateURL(selectedCategory, '');
     };
+
+    // ✅ Early return moved AFTER all hooks
+    if (!products || products.length === 0) {
+        return (
+            <div style={{ marginTop: '100px', textAlign: 'center' }}>
+                <h2>No products found</h2>
+            </div>
+        );
+    }
 
     return (
         <>
