@@ -56,23 +56,149 @@ button:hover {
 }
 
 /* Footer */
-.footer a:hover {
-    color: #c6a43f;
+/* ========== Footer ========== */
+.footer {
+    background: #0f172a;
+    color: #94a3b8;
+    padding: 60px 0 0;
+    margin-top: 60px;
 }
 
-/* Slider */
-.slick-dots li button:before {
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 40px;
+    margin-bottom: 40px;
+}
+
+.footer-logo {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 16px;
     color: #fff;
 }
 
-.slick-dots li.slick-active button:before {
+.footer-logo span {
     color: #c6a43f;
 }
 
+.footer-text {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    color: #94a3b8;
+}
+
+/* Social Icons */
+.footer-social {
+    display: flex;
+    gap: 12px;
+}
+
+.footer-social-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    cursor: pointer;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.footer-social-icon:hover {
+    background: #c6a43f;
+    color: #fff;
+}
+
+/* Footer Headings */
+.footer-heading {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #fff;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.footer-heading::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: #c6a43f;
+}
+
+/* Footer Links */
+.footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-links li {
+    margin-bottom: 10px;
+}
+
+.footer-links a {
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.footer-links a:hover {
+    color: #c6a43f;
+    padding-left: 5px;
+}
+
+/* Contact List */
+.footer-contact {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-contact li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: #94a3b8;
+}
+
+.footer-contact svg {
+    flex-shrink: 0;
+    color: #c6a43f;
+}
+
+/* Footer Bottom */
+.footer-bottom {
+    text-align: center;
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 13px;
+    color: #64748b;
+}
+
 /* Responsive */
-@media(max-width:768px) {
-    .section {
-        padding: 50px 0;
+@media (max-width: 768px) {
+    .footer {
+        padding: 40px 0 0;
+    }
+
+    .footer-grid {
+        gap: 30px;
+    }
+
+    .footer-heading::after {
+        width: 30px;
     }
 }
 
