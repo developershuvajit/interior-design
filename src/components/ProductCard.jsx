@@ -4,7 +4,6 @@ const ProductCard = ({ product }) => {
     const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({ name: '', phone: '', quantity: '' });
 
-    // যদি product undefined হয় তাহলে কিছু দেখাবেন না
     if (!product) {
         return null;
     }
@@ -24,7 +23,6 @@ const ProductCard = ({ product }) => {
         setFormData({ name: '', phone: '', quantity: '' });
     };
 
-    // ইমেজ এরর হ্যান্ডলিং
     const handleImageError = (e) => {
         e.target.style.display = 'none';
         const placeholder = e.target.nextSibling;
@@ -37,7 +35,6 @@ const ProductCard = ({ product }) => {
         <>
             <div className="product-card">
                 <div className="product-image">
-                    {/* ইমেজ দেখানো */}
                     {product.image ? (
                         <img
                             src={product.image}
@@ -46,17 +43,12 @@ const ProductCard = ({ product }) => {
                             onError={handleImageError}
                         />
                     ) : null}
-
-                    {/* প্লেসহোল্ডার (ইমেজ না থাকলে বা লোড না হলে) */}
                     <div
                         className="image-placeholder"
                         style={{ display: product.image ? 'none' : 'flex' }}
                     >
-                        <span>🖼️</span>
-                        <p>Image Coming Soon</p>
+                        <span>No Image</span>
                     </div>
-
-                    {/* ব্যাজ */}
                     <div className="product-badge">{product.category || 'General'}</div>
                 </div>
 
@@ -64,15 +56,15 @@ const ProductCard = ({ product }) => {
                     <h3 className="product-title">{product.name || 'Product Name'}</h3>
                     <p className="product-brand">{product.brand || 'Brand'}</p>
                     <div className="product-details">
-                        <span className="product-thickness">📏 {product.thickness || 'N/A'}</span>
-                        <span className="product-bestfor">🎯 {product.bestFor || 'General'}</span>
+                        <span className="product-thickness">Size: {product.thickness || 'N/A'}</span>
+                        <span className="product-bestfor">Use: {product.bestFor || 'General'}</span>
                     </div>
                     <div className="product-price-wrapper">
                         <span className="product-price">₹{product.price || 0}</span>
                         <span className="product-perunit">/sqft</span>
                     </div>
                     <button className="product-btn" onClick={handleBookNow}>
-                        Book Now →
+                        Book Now
                     </button>
                 </div>
             </div>

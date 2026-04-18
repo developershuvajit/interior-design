@@ -9,10 +9,11 @@ const Products = () => {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
+    const [sortBy, setSortBy] = useState('default');
     const productsPerPage = 9;
 
-    // ✅ Hooks always called (before any conditional return)
-    // URL থেকে category এবং search প্যারামিটার পড়ুন
+    // URL থেকে প্যারামিটার পড়ুন
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const categoryParam = params.get('category');
@@ -29,12 +30,11 @@ const Products = () => {
         }
     }, [location.search]);
 
-    // Reset to first page when filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [selectedCategory, searchTerm]);
+    }, [selectedCategory, searchTerm, priceRange, sortBy]);
 
-    // URL আপডেট করার ফাংশন
+    // URL আপডেট
     const updateURL = (category, search) => {
         const params = new URLSearchParams();
         if (category && category !== 'All') {
@@ -46,30 +46,31 @@ const Products = () => {
         navigate(`/products${params.toString() ? `?${params.toString()}` : ''}`, { replace: true });
     };
 
-    // Filter products based on category and search
-    const filteredProducts = products.filter(product => {
+    // ফিল্টার এবং সর্টিং
+    let filteredProducts = products.filter(product => {
         if (!product) return false;
         const matchCategory = selectedCategory === 'All' || product.category === selectedCategory;
         const matchSearch = searchTerm === '' ||
             (product.name && product.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            (product.brand && product.brand.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            (product.bestFor && product.bestFor.toLowerCase().includes(searchTerm.toLowerCase()));
-        return matchCategory && matchSearch;
+            (product.brand && product.brand.toLowerCase().includes(searchTerm.toLowerCase()));
+        const matchPrice = product.price >= priceRange.min && product.price <= priceRange.max;
+        return matchCategory && matchSearch && matchPrice;
     });
 
-    // Pagination Logic
+    // সর্টিং
+    if (sortBy === 'price-low') {
+        filteredProducts.sort((a, b) => a.price - b.price);
+    } else if (sortBy === 'price-high') {
+        filteredProducts.sort((a, b) => b.price - a.price);
+    } else if (sortBy === 'name-asc') {
+        filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    // Pagination
     const indexOfLastProduct = currentPage * productsPerPage;
     const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
     const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
     const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
-
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
-    const goToPrevPage = () => {
-        if (currentPage > 1) setCurrentPage(currentPage - 1);
-    };
-    const goToNextPage = () => {
-        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-    };
 
     const handleFilterChange = (category) => {
         setSelectedCategory(category);
@@ -87,7 +88,16 @@ const Products = () => {
         updateURL(selectedCategory, '');
     };
 
-    // ✅ Early return moved AFTER all hooks
+    const handlePriceMinChange = (e) => {
+        const value = Number(e.target.value);
+        setPriceRange(prev => ({ ...prev, min: value }));
+    };
+
+    const handlePriceMaxChange = (e) => {
+        const value = Number(e.target.value);
+        setPriceRange(prev => ({ ...prev, max: value }));
+    };
+
     if (!products || products.length === 0) {
         return (
             <div style={{ marginTop: '100px', textAlign: 'center' }}>
@@ -102,116 +112,184 @@ const Products = () => {
             <section className="breadcrumb">
                 <div className="container">
                     <h2>Our Products</h2>
-                    <p>Home / Our Products</p>
+                    <p>Home / Products</p>
                 </div>
             </section>
 
-            {/* Products Content */}
             <section className="section products-page">
-                <div className="container">
+                <div className="container products-layout">
 
-                    {/* Header */}
-                    <div className="products-header">
-                        <h2>
-                            Premium <span>Quality Products</span>
-                        </h2>
-                        <p>
-                            Explore our wide range of premium plywood, block boards, and accessories
-                            for all your interior needs.
-                        </p>
-                    </div>
-
-                    {/* Search Bar */}
-                    <div className="search-section">
-                        <div className="search-wrapper">
-                            <span className="search-icon">🔍</span>
-                            <input
-                                type="text"
-                                placeholder="Search by product name, brand, or best for..."
-                                className="search-input"
-                                value={searchTerm}
-                                onChange={handleSearchChange}
-                            />
-                            {searchTerm && (
-                                <button className="search-clear" onClick={clearSearch}>
-                                    ✕
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Category Filter */}
-                    <div className="filter-section">
-                        {categories && categories.map(cat => (
-                            <button
-                                key={cat}
-                                onClick={() => handleFilterChange(cat)}
-                                className={`filter-btn ${selectedCategory === cat ? 'active' : ''}`}
-                            >
-                                {cat}
-                                {selectedCategory === cat && <span className="filter-count">✓</span>}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Results Count */}
-                    <div className="results-bar">
-                        <p className="results-count">
-                            {filteredProducts.length > 0
-                                ? `Showing ${indexOfFirstProduct + 1}-${Math.min(indexOfLastProduct, filteredProducts.length)} of ${filteredProducts.length} products`
-                                : 'No products found'}
-                        </p>
-                    </div>
-
-                    {/* Products Grid */}
-                    <div className="products-grid">
-                        {currentProducts.map((product, index) => (
-                            <ProductCard key={product.id || index} product={product} />
-                        ))}
-                    </div>
-
-                    {/* Pagination */}
-                    {totalPages > 1 && (
-                        <div className="pagination">
-                            <button
-                                onClick={goToPrevPage}
-                                className={`pagination-btn ${currentPage === 1 ? 'disabled' : ''}`}
-                                disabled={currentPage === 1}
-                            >
-                                ← Previous
-                            </button>
-
-                            <div className="pagination-numbers">
-                                {[...Array(totalPages).keys()].map(number => (
+                    {/* Sidebar */}
+                    <aside className="products-sidebar">
+                        {/* Categories */}
+                        <div className="sidebar-widget">
+                            <h3 className="sidebar-title">Categories</h3>
+                            <ul className="category-list">
+                                <li>
                                     <button
-                                        key={number + 1}
-                                        onClick={() => paginate(number + 1)}
-                                        className={`pagination-number ${currentPage === number + 1 ? 'active' : ''}`}
+                                        onClick={() => handleFilterChange('All')}
+                                        className={`category-link ${selectedCategory === 'All' ? 'active' : ''}`}
                                     >
-                                        {number + 1}
+                                        All Products
+                                        <span className="category-count">{products.length}</span>
                                     </button>
+                                </li>
+                                {categories.filter(c => c !== 'All').map(cat => (
+                                    <li key={cat}>
+                                        <button
+                                            onClick={() => handleFilterChange(cat)}
+                                            className={`category-link ${selectedCategory === cat ? 'active' : ''}`}
+                                        >
+                                            {cat}
+                                            <span className="category-count">
+                                                {products.filter(p => p.category === cat).length}
+                                            </span>
+                                        </button>
+                                    </li>
                                 ))}
+                            </ul>
+                        </div>
+
+                        {/* Price Range */}
+                        <div className="sidebar-widget">
+                            <h3 className="sidebar-title">Price Range</h3>
+                            <div className="price-range">
+                                <div className="price-inputs">
+                                    <input
+                                        type="number"
+                                        placeholder="Min"
+                                        value={priceRange.min}
+                                        onChange={handlePriceMinChange}
+                                        className="price-input"
+                                    />
+                                    <span>to</span>
+                                    <input
+                                        type="number"
+                                        placeholder="Max"
+                                        value={priceRange.max}
+                                        onChange={handlePriceMaxChange}
+                                        className="price-input"
+                                    />
+                                </div>
+                                <div className="price-slider-container">
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="1000"
+                                        value={priceRange.min}
+                                        onChange={handlePriceMinChange}
+                                        className="price-slider min-slider"
+                                    />
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="1000"
+                                        value={priceRange.max}
+                                        onChange={handlePriceMaxChange}
+                                        className="price-slider max-slider"
+                                    />
+                                </div>
+                                <div className="price-labels">
+                                    <span>₹0</span>
+                                    <span>₹1000+</span>
+                                </div>
                             </div>
+                        </div>
 
-                            <button
-                                onClick={goToNextPage}
-                                className={`pagination-btn ${currentPage === totalPages ? 'disabled' : ''}`}
-                                disabled={currentPage === totalPages}
+                        {/* Sort By */}
+                        <div className="sidebar-widget">
+                            <h3 className="sidebar-title">Sort By</h3>
+                            <select
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value)}
+                                className="sort-select"
                             >
-                                Next →
-                            </button>
+                                <option value="default">Default</option>
+                                <option value="price-low">Price: Low to High</option>
+                                <option value="price-high">Price: High to Low</option>
+                                <option value="name-asc">Name: A to Z</option>
+                            </select>
                         </div>
-                    )}
+                    </aside>
 
-                    {/* No Results */}
-                    {filteredProducts.length === 0 && (
-                        <div className="no-results">
-                            <span className="no-results-icon">🔍</span>
-                            <h3>No products found</h3>
-                            <p>Try different search term or category</p>
+                    {/* Main Content */}
+                    <div className="products-main">
+
+                        {/* Search Bar */}
+                        <div className="search-section">
+                            <div className="search-wrapper">
+                                <input
+                                    type="text"
+                                    placeholder="Search products by name or brand..."
+                                    className="search-input"
+                                    value={searchTerm}
+                                    onChange={handleSearchChange}
+                                />
+                                {searchTerm && (
+                                    <button className="search-clear" onClick={clearSearch}>
+                                        ✕
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                    )}
 
+                        {/* Results Count */}
+                        <div className="results-bar">
+                            <p className="results-count">
+                                {filteredProducts.length > 0
+                                    ? `Showing ${indexOfFirstProduct + 1}-${Math.min(indexOfLastProduct, filteredProducts.length)} of ${filteredProducts.length} products`
+                                    : 'No products found'}
+                            </p>
+                        </div>
+
+                        {/* Products Grid - 3 per row */}
+                        <div className="products-grid">
+                            {currentProducts.map((product, index) => (
+                                <ProductCard key={product.id || index} product={product} />
+                            ))}
+                        </div>
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="pagination">
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    className={`pagination-btn ${currentPage === 1 ? 'disabled' : ''}`}
+                                    disabled={currentPage === 1}
+                                >
+                                    Previous
+                                </button>
+
+                                <div className="pagination-numbers">
+                                    {[...Array(totalPages).keys()].map(number => (
+                                        <button
+                                            key={number + 1}
+                                            onClick={() => setCurrentPage(number + 1)}
+                                            className={`pagination-number ${currentPage === number + 1 ? 'active' : ''}`}
+                                        >
+                                            {number + 1}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                    className={`pagination-btn ${currentPage === totalPages ? 'disabled' : ''}`}
+                                    disabled={currentPage === totalPages}
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        )}
+
+                        {/* No Results */}
+                        {filteredProducts.length === 0 && (
+                            <div className="no-results">
+                                <h3>No products found</h3>
+                                <p>Try different search term or category</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </section>
         </>
